@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Mini aplicacion web estatica desplegada automaticamente con GitHub Actions hacia una VPS."
+    />
+    <title>CI/CD hacia VPS</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="./script.js" defer></script>
+  </head>
+  <body>
+    <main class="page-shell">
+      <section class="hero" aria-labelledby="page-title">
+        <p class="eyebrow">Workflow CI/CD</p>
+        <h1 id="page-title">Despliegue automatico hacia VPS</h1>
+        <p class="intro">
+          Esta mini home page se valida, se construye como sitio estatico y se
+          publica automaticamente en la VPS cuando hay un push a la rama principal.
+        </p>
+        <div class="status-panel" aria-live="polite">
+          <span class="status-dot" aria-hidden="true"></span>
+          <span id="deploy-status">Esperando informacion del navegador...</span>
+        </div>
+      </section>
+
+      <section class="pipeline" aria-labelledby="pipeline-title">
+        <h2 id="pipeline-title">Flujo automatizado</h2>
+        <ol class="steps">
+          <li>
+            <span>1</span>
+            <strong>Push a GitHub</strong>
+            <p>El cambio en la rama principal activa GitHub Actions.</p>
+          </li>
+          <li>
+            <span>2</span>
+            <strong>Validacion</strong>
+            <p>El pipeline revisa que existan HTML, CSS y JavaScript.</p>
+          </li>
+          <li>
+            <span>3</span>
+            <strong>Construccion</strong>
+            <p>Los archivos estaticos se copian a la carpeta <code>dist</code>.</p>
+          </li>
+          <li>
+            <span>4</span>
+            <strong>Despliegue</strong>
+            <p>GitHub Actions copia el artefacto hacia <code>/var/www/html</code>.</p>
+          </li>
+        </ol>
+      </section>
+    </main>
+  </body>
+</html>

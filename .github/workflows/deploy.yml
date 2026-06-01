@@ -1,0 +1,81 @@
+name: Deploy static site to VPS
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  validate-build-deploy:
+    name: Validate, build and deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate static app
+        run: pnpm validate
+
+      - name: Build static site
+        run: pnpm build
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: static-site
+          path: dist
+          if-no-files-found: error
+
+      - name: Prepare target directory on VPS
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            VPS_PATH="${{ secrets.VPS_PATH }}"
+            if [ -z "$VPS_PATH" ] || [ "$VPS_PATH" = "/" ]; then
+              echo "VPS_PATH is empty or unsafe"
+              exit 1
+            fi
+            mkdir -p "$VPS_PATH"
+            find "$VPS_PATH" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+
+      - name: Copy static site to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: "dist/*"
+          target: ${{ secrets.VPS_PATH }}
+          strip_components: 1
+
+      - name: Verify deployed site
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            VPS_PATH="${{ secrets.VPS_PATH }}"
+            test -f "$VPS_PATH/index.html"
+            test -f "$VPS_PATH/styles.css"
+            test -f "$VPS_PATH/script.js"
+            echo "Static site deployed to $VPS_PATH"
